@@ -1,0 +1,62 @@
+version: '3'
+
+# puerto host : puerto container
+
+services:
+    db:
+        image: postgres
+        container_name: CLICK_DB
+        env_file: 
+            - ./.env
+        environment:
+            POSTGRES_DB: postgres
+            POSTGRES_USER: admin
+            POSTGRES_PASSWORD: 1234
+        volumes:
+            - pgdata:/var/lib/postgresql
+        ports:
+            - "5432:5432"
+        networks:
+            - clicknetwork
+    pgadmin:
+        image: dpage/pgadmin4
+        container_name: CLICK_PGADMIN4
+        env_file: 
+            - ./.env
+        environment:
+            PGADMIN_DEFAULT_EMAIL: admin@linuxhint.com
+            PGADMIN_DEFAULT_PASSWORD: secret
+            PGADMIN_LISTEN_PORT: 80
+        ports:
+            - "8085:80" #puerto 8081 en el contenedor
+        volumes:
+            - pgadmin-data:/var/lib/pgadmin
+        links:
+            - "db:pgsql-server" # se crea el hostname pgsql-server para poder acceder a la base de datos por ese host
+        networks:
+            - clicknetwork
+    click_web:
+        container_name: CLICK_WEB
+        build: .
+        working_dir: /usr/src/app
+        restart: unless-stopped
+        #command: python FTP/manage.py runserver 0.0.0.0:8000
+        stdin_open: true
+        tty: true
+        env_file:
+            - ./.env
+        volumes:
+            - .:/usr/src/app
+        ports:
+            - "8080:8000"
+        depends_on:
+            - db
+        networks:
+            - clicknetwork
+volumes:
+    pgdata:
+    pgadmin-data:
+
+networks:
+    clicknetwork:
+        driver: bridge
