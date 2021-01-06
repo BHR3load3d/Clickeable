@@ -5,7 +5,7 @@ version: '3'
 services:
     db:
         image: postgres
-        container_name: CLICK_DB
+        container_name: CLICK_DB_APP
         env_file: 
             - ./.env
         environment:
@@ -20,7 +20,7 @@ services:
             - clicknetwork
     pgadmin:
         image: dpage/pgadmin4
-        container_name: CLICK_PGADMIN4
+        container_name: CLICK_PGADMIN4_APP
         env_file: 
             - ./.env
         environment:
@@ -36,7 +36,7 @@ services:
         networks:
             - clicknetwork
     click_web:
-        container_name: CLICK_WEB
+        container_name: CLICK_WEB_APP
         build: .
         working_dir: /usr/src/app
         restart: unless-stopped
