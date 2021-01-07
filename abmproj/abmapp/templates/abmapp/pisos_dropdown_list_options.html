@@ -1,0 +1,4 @@
+<option value="-1">sin selección</option>
+{% for p in pisos %}
+    <option value="{{ p.id }}">{{ p.descripcion }}</option>
+{% endfor %}

@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'abmapp.apps.AbmappConfig',
+    'mathfilters',
 ]
 
 MIDDLEWARE = [
@@ -75,8 +77,12 @@ WSGI_APPLICATION = 'abmproj.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'postgres',#'<db_name>', #es la base de datos por default. de lo contrario hay que crear una sino rompe.
+        'USER': 'admin', #'<db_username>',
+        'PASSWORD': '1234', #'<password>',
+        'HOST': 'db',#'<db_hostname_or_ip>',
+        'PORT': '5432',#'<db_port>',
     }
 }
 
