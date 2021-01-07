@@ -22,5 +22,5 @@ class area(models.Model):
     radioMayor = models.DecimalField(max_digits=20, decimal_places=2,blank=False, null=False)
     radioMenor = models.DecimalField(max_digits=20, decimal_places=2,blank=False, null=False)
     usuarioAlta = models.CharField(max_length=500)
-    usuarioBaja = models.CharField(max_length=500)
+    usuarioBaja = models.CharField(max_length=500, null=True, blank=True, default=None)
     activo = models.BooleanField(blank=False, null=False, default=True)
