@@ -7,6 +7,7 @@
      </head>
     <body>
         <form method="POST">{% csrf_token %}
+            <label>Seleccione Edificio: </label>
             <select name='lstEdificios' id='lstEdificios'>
                 {% if edificios %}
                     <option value=-1>sin selección</option>
@@ -21,6 +22,7 @@
         
             </select>
 
+            <label>Seleccione piso: </label>
             <select name='lstPisos' id='lstPisos'>
                 <option value=-1>sin pisos cargados</option>
             </select>
@@ -64,6 +66,8 @@
                     },
                     success: function (data) {
                         $("#lstAreas").html(data);
+                        jQuery("#panelListadoAreas").show();
+                        jQuery("#imgPlano").show();
                     }
                 });
             });
@@ -159,6 +163,29 @@
 
             }
 
+            function fnCancelarAgregarArea(){
+                fnVisibilidadPanelAreas(true);
+                cropper.destroy();
+            }
+
+            function fnBorrarArea(idArea, obj){
+                var url = "{% url 'ajax_delete_area' %}";
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    //se tiene que agregar el header con el token. el mismo esta agregado como input hidden
+                    headers: { "X-CSRFToken": document.getElementsByName('csrfmiddlewaretoken')[0].value },
+                    data: {
+                        'id': idArea
+                    },
+                    success: function (data) {
+                        obj.parentNode.parentNode.removeChild(obj.parentNode);
+                    }
+                });
+
+                
+            }
+
             function showCoords(event) {
                 var x = event.clientX;
                 var y = event.clientY;
@@ -181,12 +208,13 @@
         <table>
             <tr>
                 <td>
-                    <img onmousemove="showCoords(event)" onmouseout="clearCoor()" id='imgPlano'  alt="Workplace" usemap="#workmap" src="" />
+                    <!-- <img onmousemove="showCoords(event)" onmouseout="clearCoor()" id='imgPlano'  alt="Workplace" usemap="#workmap" src="" /> -->
+                    <img id='imgPlano'  alt="Workplace" usemap="#workmap" src=""  style="display: none;"/>
                     <p id="demo"></p>
                 </td>
-                <td>
-                    <div id="panelListadoAreas">
-                        <div>Areas habilitadas <font style="cursor:pointer;" onclick="fnAgregarArea()">+</font></div>
+                <td style="vertical-align:top;">
+                    <div id="panelListadoAreas" style="display: none;">
+                        <div>Areas habilitadas <div style="float:right;cursor:pointer;"><font style="cursor:pointer;" onclick="fnAgregarArea()">+</font></div></div>
                         <hr>
                         <div id="lstAreasContainer">
                             <ul id="lstAreas">
@@ -195,7 +223,10 @@
                         </div>
                     </div>
                     <div id="panelAgregarArea" style="display: none;">
+                        <div>Cargar area <div style="float:right;cursor:pointer;"><font style="cursor:pointer;" onclick="fnCancelarAgregarArea()">X</font></div></div>
+                        <hr>
                         <label>Descripción:</label><input type="text" id="txtDescArea"/>
+                        <hr>
                         <button type="button" onclick="fnGuardarArea()"> Guardar area </button>
                     </div>
                 </td>

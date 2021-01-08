@@ -18,7 +18,7 @@ def load_pisos(request):
 
 def load_areas(request):
     piso_id = request.GET.get('piso')
-    areas = area.objects.filter(piso=piso_id).order_by('descripcion')
+    areas = area.objects.filter(piso=piso_id).filter(activo=True).order_by('descripcion')
     return render(request, 'abmapp/areas_list.html', {'areas': areas})
 
 def save_area(request):
@@ -32,6 +32,16 @@ def save_area(request):
     obj = area.objects.create(descripcion=descripcion, tipoArea=1, latitud=latitud, longitud=longitud, radioMayor=radioMayor, radioMenor=radioMenor, usuarioAlta='Ivan', usuarioBaja=None, activo=1, piso_id=piso)
 
     return JsonResponse({'id': obj.id})
+
+def delete_area(request):
+    id = request.POST.get('id')
+    print(id)
+    a = area.objects.get(id=id)
+    a.activo = False
+    a.usuarioBaja = "ivan"
+    a.save()
+
+    return JsonResponse({'resultado': 'OK'})
 
 
 def carga(request):
