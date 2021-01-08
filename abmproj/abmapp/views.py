@@ -1,30 +1,13 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.http import JsonResponse
 from django.template import loader
 from .models import edificio,piso,area
 from django import forms
 
 def index(request):
     template = loader.get_template('abmapp/index.html')
-
-    # if 'piso' in request.POST.keys() and request.POST['piso']:
-    #     piso_seleccionado = request.POST['piso']
-    # else:
-    #     piso_seleccionado = -1
-
-    # if 'edificio' in request.POST.keys() and request.POST['edificio']:
-    #     edificio_seleccionado = request.POST['edificio']
-    # else:
-    #     edificio_seleccionado = -1
-
-    # print(edificio_seleccionado)
-    # print(piso_seleccionado)
-
     edificios = edificio.objects.filter(activo=1)
-    # pisos = piso.objects.filter(edificio=edificio_seleccionado).filter(activo=1)
-    # areas = area.objects.filter(piso=piso_seleccionado).filter(activo=1)
-
-    # context = { 'areas' : areas, 'edificios': edificios, 'pisos': pisos }
     context = { 'edificios': edificios }
     return HttpResponse(template.render(context, request))
 
@@ -37,6 +20,18 @@ def load_areas(request):
     piso_id = request.GET.get('piso')
     areas = area.objects.filter(piso=piso_id).order_by('descripcion')
     return render(request, 'abmapp/areas_list.html', {'areas': areas})
+
+def save_area(request):
+    descripcion = request.POST.get('descripcion')
+    latitud = request.POST.get('latitud')
+    longitud = request.POST.get('longitud')
+    radioMayor = request.POST.get('radioMayor')
+    radioMenor = request.POST.get('radioMenor')
+    piso = request.POST.get('piso')
+
+    obj = area.objects.create(descripcion=descripcion, tipoArea=1, latitud=latitud, longitud=longitud, radioMayor=radioMayor, radioMenor=radioMenor, usuarioAlta='Ivan', usuarioBaja=None, activo=1, piso_id=piso)
+
+    return JsonResponse({'id': obj.id})
 
 
 def carga(request):

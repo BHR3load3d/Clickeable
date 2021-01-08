@@ -3,8 +3,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-        
-    </head>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.9/cropper.min.css"  rel="stylesheet"/>
+     </head>
     <body>
         <form method="POST">{% csrf_token %}
             <select name='lstEdificios' id='lstEdificios'>
@@ -24,14 +24,16 @@
             <select name='lstPisos' id='lstPisos'>
                 <option value=-1>sin pisos cargados</option>
             </select>
-
-            <select name='lstAreas' id='lstAreas'>
-                <option value=-1>sin areas cargadas</option>
-            </select>
         </form>
 
         <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.9/cropper.min.js"></script>
         <script>
+            var cropInfo = null;
+            var cropper = null;
+            var piso = -1;
+
             $("#lstEdificios").change(function () {
                 var url = "{% url 'ajax_load_pisos' %}";
                 var edificio = $(this).val();
@@ -50,7 +52,7 @@
 
             $("#lstPisos").change(function () {
                 var url = "{% url 'ajax_load_areas' %}";
-                var piso = $(this).val();
+                piso = $(this).val();
                 var imgPlano = $('#lstPisos option[value="' + piso + '"]').attr('Plano');
 
                 document.getElementById('imgPlano').setAttribute('src', imgPlano)
@@ -65,12 +67,143 @@
                     }
                 });
             });
+
+            function fnAgregarArea(){
+                fnVisibilidadPanelAreas(false);
+
+                const image = document.getElementById('imgPlano');
+                cropper = new Cropper(image, {
+                    aspectRatio: NaN,
+                    autoCropArea: 0.2,
+                    crop(event) {
+                        cropInfo = { "X": event.detail.x
+                                    , "Y": event.detail.y
+                                    , "W": event.detail.width
+                                    , "H": event.detail.height
+                                    , "R": event.detail.rotate  
+                                    , "SX": event.detail.scaleX
+                                    , "SY": event.detail.scaleY
+                            }
+                        },
+                    });
+            }
+
+            function fnVisibilidadPanelAreas(bListar){
+                jQuery("#txtDescArea").val('');
+
+                if(bListar){
+                    jQuery("#panelAgregarArea").hide();
+                    jQuery("#panelListadoAreas").show();
+                }
+                else{
+                    jQuery("#panelListadoAreas").hide();
+                    jQuery("#panelAgregarArea").show();
+                }
+            }
+
+            function fnGuardarArea(){
+                var OK = fnValidarArea(); //tiene que mostrar los mensajes de validación
+
+                if(OK){
+                    cropper.destroy();
+                    //guardado
+                    fnGuardarAreaDB(document.getElementById("txtDescArea").value, cropInfo);
+                }
+            }
+
+            function fnGuardarAreaDB(sDescripcion, oCropInfo){
+                var url = "{% url 'ajax_save_area' %}";
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    //se tiene que agregar el header con el token. el mismo esta agregado como input hidden
+                    headers: { "X-CSRFToken": document.getElementsByName('csrfmiddlewaretoken')[0].value },
+                    data: {
+                        'descripcion': sDescripcion,
+                        'latitud': oCropInfo.X + (oCropInfo.W/2),
+                        'longitud': oCropInfo.Y + (oCropInfo.H/2),
+                        'radioMayor': oCropInfo.W/2,
+                        'radioMenor': oCropInfo.H/2,
+                        'piso': piso
+                    },
+                    success: function (data) {
+                        fnAddAreaToList(data.id, sDescripcion);
+                        fnAddAreaToMap(oCropInfo);
+                        fnVisibilidadPanelAreas(true);
+                    }
+                });
+            }
+
+            function fnValidarArea(){
+
+                return true;
+            }
+
+            function fnAddAreaToList(id, descripcion){
+                var lst = document.getElementById("lstAreas");
+                var item = document.createElement("li");
+                item.innerHTML = descripcion;
+                item.setAttribute("value", id);
+                lst.appendChild(item);
+            }
+
+            function fnAddAreaToMap(oCropInfo){
+                var item = document.createElement("area");
+                item.setAttribute("shape", "rect");
+                item.setAttribute("coords", oCropInfo.X + "," + oCropInfo.Y + "," + (oCropInfo.X + oCropInfo.W) + "," + (oCropInfo.Y + oCropInfo.H));
+                item.setAttribute("style", "cursor:pointer;");
+                item.setAttribute("href","#"); 
+
+                var map = document.getElementById("workmap");
+                map.appendChild(item);
+
+            }
+
+            function showCoords(event) {
+                var x = event.clientX;
+                var y = event.clientY;
+                var coor = "X: " + x + ", Y: " + y;
+                document.getElementById("demo").innerHTML = coor;
+              }
+              
+              function clearCoor() {
+                document.getElementById("demo").innerHTML = "";
+              }
+
+            function getCoords(event) {
+                var x = event.clientX;
+                var y = event.clientY;
+                var coor = {"X":x, "Y":y};
+                return coor;
+            }
         </script>
 
+        <table>
+            <tr>
+                <td>
+                    <img onmousemove="showCoords(event)" onmouseout="clearCoor()" id='imgPlano'  alt="Workplace" usemap="#workmap" src="" />
+                    <p id="demo"></p>
+                </td>
+                <td>
+                    <div id="panelListadoAreas">
+                        <div>Areas habilitadas <font style="cursor:pointer;" onclick="fnAgregarArea()">+</font></div>
+                        <hr>
+                        <div id="lstAreasContainer">
+                            <ul id="lstAreas">
 
-        <img id='imgPlano'  alt="Workplace" usemap="#workmap" src="" />
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="panelAgregarArea" style="display: none;">
+                        <label>Descripción:</label><input type="text" id="txtDescArea"/>
+                        <button type="button" onclick="fnGuardarArea()"> Guardar area </button>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
 
-        <map name="workmap">
+        <map name="workmap" id="workmap">
             {% if data %}
                 {% for d in data %}
 
